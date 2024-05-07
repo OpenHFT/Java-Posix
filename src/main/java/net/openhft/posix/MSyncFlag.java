@@ -1,6 +1,5 @@
 package net.openhft.posix;
 
-
 public enum MSyncFlag {
     //#define MS_ASYNC        1               /* sync memory asynchronously */
     /**

@@ -18,7 +18,6 @@
 
 package net.openhft.posix.util;
 
-
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -203,21 +202,17 @@ public class Histogram {
         return perthousand / 10.0;
     }
 
-
     public double[] getPercentiles() {
         return getPercentiles(percentilesFor(totalCount));
     }
-
 
     public double[] getPercentiles(double[] percentileFor) {
         return DoubleStream.of(percentileFor).map(this::percentile).toArray();
     }
 
-
     public String toMicrosFormat() {
         return toMicrosFormat(t -> t / 1e3);
     }
-
 
     public String toMicrosFormat(DoubleFunction<Double> toMicros) {
         if (totalCount < 1_000_000)
@@ -250,11 +245,9 @@ public class Histogram {
                 p(toMicros.apply(percentile(1)));
     }
 
-
     public String toLongMicrosFormat() {
         return toLongMicrosFormat(t -> t / 1e3);
     }
-
 
     public String toLongMicrosFormat(DoubleFunction<Double> toMicros) {
         if (totalCount < 1_000_000)
@@ -278,7 +271,6 @@ public class Histogram {
                 p(toMicros.apply(percentile(1)));
     }
 
-
     private String first4nines(DoubleFunction<Double> toMicros) {
         return p(toMicros.apply(percentile(0.5))) + " / " +
                 p(toMicros.apply(percentile(0.9))) + "  " +
@@ -289,7 +281,6 @@ public class Histogram {
                 p(toMicros.apply(percentile(0.9997))) + " / " +
                 p(toMicros.apply(percentile(0.9999)));
     }
-
 
     private String p(double v) {
         double v2 = v * 100 / (1 << fractionBits);

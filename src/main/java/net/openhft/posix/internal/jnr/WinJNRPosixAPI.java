@@ -45,7 +45,6 @@ public final class WinJNRPosixAPI implements PosixAPI {
         return jnr._write(fd, src, len);
     }
 
-
     @Override
     public int close(int fd) {
         return jnr._close(fd);

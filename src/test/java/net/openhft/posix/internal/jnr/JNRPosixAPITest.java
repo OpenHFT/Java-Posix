@@ -191,7 +191,6 @@ public class JNRPosixAPITest {
         assertEquals(1, poolIntReduce(N, jnr::getpid));
     }
 
-
     @Test
     public void gettid() throws InterruptedException {
         assumeFalse("macOS doesn't support 'gettid'", isMacOSX());

@@ -92,7 +92,6 @@ public class BenchmarkMain {
         assertEquals(length, mapping.length());
         assertEquals(0L, mapping.offset());
 
-
         assertEquals(0, jnr.du(filename));
 
         AtomicLong upto = new AtomicLong();
