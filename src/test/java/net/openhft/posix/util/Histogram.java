@@ -99,6 +99,11 @@ public class Histogram {
     }
 
     @Override
+    public int hashCode() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public String toString() {
         return "Histogram{" +
                 "fractionBits=" + fractionBits +

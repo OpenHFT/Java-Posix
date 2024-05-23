@@ -5,7 +5,7 @@
     <parent>
         <groupId>net.openhft</groupId>
         <artifactId>java-parent-pom</artifactId>
-        <version>1.25.4</version>
+        <version>1.26.0</version>
         <relativePath />
     </parent>
 
@@ -26,12 +26,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>8</maven.compiler.source>
-        <maven.compiler.target>8</maven.compiler.target>
-    </properties>
 
     <dependencies>
         <dependency>
@@ -85,6 +79,13 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <failOnWarning>false</failOnWarning>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <profiles>
@@ -107,22 +108,6 @@
                                     </excludes>
                                 </resource>
                             </resources>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <configuration>
-                            <source>11</source>
-                            <target>11</target>
-                            <compilerArgs>
-                                <arg>--add-exports=java.base/jdk.internal.ref=ALL-UNNAMED</arg>
-                                <arg>--add-exports=java.base/sun.nio.ch=ALL-UNNAMED</arg>
-                            </compilerArgs>
-                            <excludes>
-                                <exclude>**/jdk8/**</exclude>
-                                <exclude>**/META-INF/services/**</exclude>
-                            </excludes>
                         </configuration>
                     </plugin>
                 </plugins>
