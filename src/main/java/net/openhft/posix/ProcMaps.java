@@ -45,5 +45,4 @@ public final class ProcMaps {
                 .filter(test)
                 .collect(toList());
     }
-
 }

@@ -18,5 +18,4 @@ final class LibraryUtil {
             throw e;
         }
     }
-
 }
