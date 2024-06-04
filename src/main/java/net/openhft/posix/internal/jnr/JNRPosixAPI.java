@@ -199,6 +199,9 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public int fallocate(int fd, int mode, long offset, long length) {
+        // fallocate support across environments/file systems is patchy
+        // try a couple of approaches in order of preference
+
         // for 64-bit systems, fallocate64 is often available, but not always
         // try fallocate64 first, falling back to fallocate if any issue
         if (UnsafeMemory.IS64BIT) {
@@ -211,7 +214,28 @@ public final class JNRPosixAPI implements PosixAPI {
         }
 
         // for 32-bit systems, and 64-bit without a functioning fallocate64
-        return jnr.fallocate(fd, mode, offset, length);
+        try {
+            int ret = jnr.fallocate(fd, mode, offset, length);
+            if (ret == 0)
+                return ret;
+        } catch (Exception e) {
+            if(mode != 0 || offset != 0)
+                throw e;
+        }
+
+        // if both fallocate attempts fail, then revert to ftruncate as a last resort where we can
+        // (ftruncate being more widely supported. not completely equivalent, but good enough)
+        if(mode == 0 && offset == 0) {
+            try {
+                int ret = jnr.ftruncate(fd,length);
+                if (ret == 0)
+                    return ret;
+            } catch (Exception ignored) {
+            }
+        }
+
+        // out of options. report error
+        return -1;
     }
 
     @Override
