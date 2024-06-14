@@ -17,10 +17,15 @@ import java.util.function.IntSupplier;
 
 import static net.openhft.posix.internal.UnsafeMemory.UNSAFE;
 
+/**
+ * Implementation of {@link PosixAPI} using JNR (Java Native Runtime).
+ * Provides POSIX-like methods for file and memory operations, leveraging the JNR library.
+ */
 public final class JNRPosixAPI implements PosixAPI {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JNRPosixAPI.class);
 
+    // JNR Runtime and Platform instances
     static final jnr.ffi.Runtime RUNTIME = FFIProvider.getSystemProvider().getRuntime();
     static final jnr.ffi.Platform NATIVE_PLATFORM = Platform.getNativePlatform();
     static final String STANDARD_C_LIBRARY_NAME = NATIVE_PLATFORM.getStandardCLibraryName();
@@ -35,17 +40,28 @@ public final class JNRPosixAPI implements PosixAPI {
                 : Jvm.is64bit() ? 325 : 376;
     }
 
+    // JNR interface for POSIX functions
     private final JNRPosixInterface jnr;
 
+    // Supplier for gettid method
     private final IntSupplier gettid;
 
+    /**
+     * Constructs a JNRPosixAPI instance and initializes the JNR interface and gettid supplier.
+     */
     public JNRPosixAPI() {
         jnr = LibraryUtil.load(JNRPosixInterface.class, STANDARD_C_LIBRARY_NAME);
         gettid = getGettid();
     }
 
+    // Cached number of processors
     private int get_nprocs_conf = 0;
 
+    /**
+     * Determines the appropriate method for getting the thread ID (gettid).
+     *
+     * @return A supplier for the gettid method.
+     */
     private IntSupplier getGettid() {
         try {
             jnr.gettid();
@@ -85,6 +101,12 @@ public final class JNRPosixAPI implements PosixAPI {
 
     static final boolean MOCKALL_DUMP = Boolean.getBoolean("mlockall.dump");
 
+    /**
+     * Throws a {@link PosixRuntimeException} with a specified message and the last error.
+     *
+     * @param msg The message to include in the exception.
+     * @return A {@link PosixRuntimeException} with the specified message and last error.
+     */
     private static RuntimeException throwPosixException(String msg) {
         final int lastError = RUNTIME.getLastError();
         for (Errno errno : Errno.values()) {
@@ -109,13 +131,21 @@ public final class JNRPosixAPI implements PosixAPI {
         return mmap;
     }
 
+    /**
+     * Performs the mlock2 system call.
+     *
+     * @param addr The address to lock.
+     * @param length The length of the memory to lock.
+     * @param lockOnFault Whether to lock on fault.
+     * @return The result of the mlock2 system call.
+     */
     private int mlock2_(long addr, long length, boolean lockOnFault) {
-        // degrade to mlock for all platforms if lockOnFault not set
+        // Degrade to mlock for all platforms if lockOnFault not set
         // or always for macos which doesn't support mlock2 at all
         if (!lockOnFault || OS.isMacOSX())
             return jnr.mlock(addr, length);
 
-        // older glibc versions do not include a wrapper for mlock2, so use syscall for generality
+        // Older glibc versions do not include a wrapper for mlock2, so use syscall for generality
         return jnr.syscall(SYS_mlock2, addr, length, MLOCK_ONFAULT);
     }
 
@@ -161,6 +191,11 @@ public final class JNRPosixAPI implements PosixAPI {
         throw throwPosixException("mlockall ");
     }
 
+    /**
+     * Attempts to lock all memory mappings of the current process.
+     *
+     * @param flags The mlockall flags.
+     */
     private void tryMLockAll(int flags) {
         try {
             ProcMaps map = ProcMaps.forSelf();
