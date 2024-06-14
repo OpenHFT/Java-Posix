@@ -6,15 +6,26 @@ import net.openhft.posix.PosixAPI;
 
 import static net.openhft.posix.internal.UnsafeMemory.UNSAFE;
 
+/**
+ * Implementation of {@link PosixAPI} using JNR (Java Native Runtime) for Windows.
+ * Provides POSIX-like methods for file and memory operations, leveraging the JNR library.
+ */
 public final class WinJNRPosixAPI implements PosixAPI {
 
+    // JNR Runtime and Platform instances
     static final jnr.ffi.Runtime RUNTIME = FFIProvider.getSystemProvider().getRuntime();
     static final Platform NATIVE_PLATFORM = Platform.getNativePlatform();
     static final String STANDARD_C_LIBRARY_NAME = NATIVE_PLATFORM.getStandardCLibraryName();
 
+    // JNR interface for Windows POSIX functions
     private final WinJNRPosixInterface jnr;
+
+    // JNR interface for Kernel32 functions
     private final Kernel32JNRInterface kernel32;
 
+    /**
+     * Constructs a WinJNRPosixAPI instance and initializes the JNR interfaces.
+     */
     public WinJNRPosixAPI() {
         jnr = LibraryUtil.load(WinJNRPosixInterface.class, STANDARD_C_LIBRARY_NAME);
         kernel32 = LibraryUtil.load(Kernel32JNRInterface.class, "Kernel32");

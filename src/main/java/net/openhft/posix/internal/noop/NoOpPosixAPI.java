@@ -4,11 +4,18 @@ import net.openhft.posix.PosixAPI;
 import net.openhft.posix.PosixRuntimeException;
 
 /**
- * No-Op Posix. Each method does nothing and returns 0 (no error)
+ * No-Op Posix implementation. Each method either does nothing and returns 0 (indicating no error)
+ * or throws a {@link PosixRuntimeException} indicating that the POSIX implementation is missing.
  */
 public class NoOpPosixAPI implements PosixAPI {
+    // The reason why this No-Op implementation is used
     private final String reason;
 
+    /**
+     * Constructs a NoOpPosixAPI with a specified reason.
+     *
+     * @param reason The reason for using this No-Op implementation.
+     */
     public NoOpPosixAPI(String reason) {
         this.reason = reason;
     }
@@ -18,6 +25,11 @@ public class NoOpPosixAPI implements PosixAPI {
         throw posixImplementationMissing();
     }
 
+    /**
+     * Throws a PosixRuntimeException indicating that the POSIX implementation is missing.
+     *
+     * @return A PosixRuntimeException indicating the missing implementation.
+     */
     private PosixRuntimeException posixImplementationMissing() {
         return new PosixRuntimeException("POSIX implementation missing " + reason);
     }
@@ -25,6 +37,7 @@ public class NoOpPosixAPI implements PosixAPI {
     // inefficient if not provided, but calling code should tolerate a no-op
     @Override
     public int fallocate(int fd, int mode, long offset, long length) {
+        // Inefficient if not provided, but calling code should tolerate a no-op
         return 0;
     }
 
