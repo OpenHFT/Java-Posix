@@ -32,15 +32,6 @@ public class PosixAPIHolder {
         } catch (Throwable t) {
             // Fallback to NoOpPosixAPI if an error occurs
             posixAPI = new NoOpPosixAPI(t.toString());
-            /*
-            this is commented out it has not been tested yet
-            try {
-                posixAPI = new JNAPosixAPI();
-            } catch (Throwable t2) {
-                LoggerFactory.getLogger(PosixAPIHolder.class).debug("Unable to load JNAPosixAPI", t2);
-                posixAPI = new RawPosixAPI();
-            }
-            */
         }
         POSIX_API = posixAPI;
     }
