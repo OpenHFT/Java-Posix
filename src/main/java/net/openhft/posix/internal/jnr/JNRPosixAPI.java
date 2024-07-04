@@ -244,7 +244,7 @@ public final class JNRPosixAPI implements PosixAPI {
                 int ret = jnr.fallocate64(fd, mode, offset, length);
                 if (ret == 0)
                     return ret;
-            } catch (Exception ignored) {
+            } catch (Throwable ignored) {
             }
         }
 
@@ -253,7 +253,7 @@ public final class JNRPosixAPI implements PosixAPI {
             int ret = jnr.fallocate(fd, mode, offset, length);
             if (ret == 0)
                 return ret;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             if(mode != 0 || offset != 0)
                 throw e;
         }
@@ -265,7 +265,7 @@ public final class JNRPosixAPI implements PosixAPI {
                 int ret = jnr.ftruncate(fd,length);
                 if (ret == 0)
                     return ret;
-            } catch (Exception ignored) {
+            } catch (Throwable ignored) {
             }
         }
 
