@@ -31,6 +31,8 @@ public final class JNRPosixAPI implements PosixAPI {
     static final String STANDARD_C_LIBRARY_NAME = NATIVE_PLATFORM.getStandardCLibraryName();
     static final Pointer NULL = Pointer.wrap(RUNTIME, 0);
 
+    static final int LOCK_EX = 2;
+    static final int LOCK_UN = 8;
     static final int MLOCK_ONFAULT = 1;
     static final int SYS_mlock2; // mlock2 syscall value
 
@@ -232,6 +234,26 @@ public final class JNRPosixAPI implements PosixAPI {
         return jnr.msync(address, length, flags);
     }
 
+    public class FileLocker implements AutoCloseable {
+        private final int fd;
+
+        public FileLocker(int fd) throws IOException {
+            this.fd = fd;
+            int ret = jnr.flock(fd, LOCK_EX);
+            if (ret != 0) {
+                throw new IOException("Failed to acquire lock");
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            int ret = jnr.flock(fd, LOCK_UN);
+            if (ret != 0) {
+                throw new IOException("Failed to release lock");
+            }
+        }
+    }
+
     @Override
     public int fallocate(int fd, int mode, long offset, long length) {
         // fallocate support across environments/file systems is patchy
@@ -254,16 +276,16 @@ public final class JNRPosixAPI implements PosixAPI {
             if (ret == 0)
                 return ret;
         } catch (Throwable e) {
-            if(mode != 0 || offset != 0)
+            if(mode != 0)
                 throw e;
         }
 
-        // if both fallocate attempts fail, then revert to ftruncate as a last resort where we can
-        // (ftruncate being more widely supported. not completely equivalent, but good enough)
-        if(mode == 0 && offset == 0) {
-            try {
-                int ret = jnr.ftruncate(fd,length);
-                if (ret == 0)
+        // if both fallocate attempts fail, then revert to posix_ftruncate when mode = 0
+        // NB: this use case uses cooperative locking to help close a small race window
+        if(mode == 0) {
+            try(FileLocker lock = new FileLocker(fd)) {
+                int ret = jnr.posix_fallocate(fd, offset, length);
+                if(ret == 0)
                     return ret;
             } catch (Throwable ignored) {
             }
