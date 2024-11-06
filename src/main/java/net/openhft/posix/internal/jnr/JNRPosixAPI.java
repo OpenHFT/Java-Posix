@@ -26,6 +26,8 @@ public final class JNRPosixAPI implements PosixAPI {
     static final String STANDARD_C_LIBRARY_NAME = NATIVE_PLATFORM.getStandardCLibraryName();
     static final Pointer NULL = Pointer.wrap(RUNTIME, 0);
 
+    static final int LOCK_EX = 2;
+    static final int LOCK_UN = 8;
     static final int MLOCK_ONFAULT = 1;
     static final int SYS_mlock2; // mlock2 syscall value
 
@@ -197,9 +199,65 @@ public final class JNRPosixAPI implements PosixAPI {
         return jnr.msync(address, length, flags);
     }
 
+    public class FileLocker implements AutoCloseable {
+        private final int fd;
+
+        public FileLocker(int fd) throws IOException {
+            this.fd = fd;
+            int ret = jnr.flock(fd, LOCK_EX);
+            if (ret != 0) {
+                throw new IOException("Failed to acquire lock");
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            int ret = jnr.flock(fd, LOCK_UN);
+            if (ret != 0) {
+                throw new IOException("Failed to release lock");
+            }
+        }
+    }
+
     @Override
     public int fallocate(int fd, int mode, long offset, long length) {
-        return UnsafeMemory.IS32BIT ? jnr.fallocate(fd, mode, offset, length) : jnr.fallocate64(fd, mode, offset, length);
+        // fallocate support across environments/file systems is patchy
+        // try a couple of approaches in order of preference
+
+        // for 64-bit systems, fallocate64 is often available, but not always
+        // try fallocate64 first, falling back to fallocate if any issue
+        if (UnsafeMemory.IS64BIT) {
+            try {
+                int ret = jnr.fallocate64(fd, mode, offset, length);
+                if (ret == 0)
+                    return ret;
+            } catch (Throwable ignored) {
+            }
+        }
+
+        // for 32-bit systems, and 64-bit without a functioning fallocate64
+        try {
+            int ret = jnr.fallocate(fd, mode, offset, length);
+            if (ret == 0)
+                return ret;
+        } catch (Throwable e) {
+            if(mode != 0)
+                throw e;
+        }
+
+        // if both fallocate attempts fail, then revert to posix_ftruncate when mode = 0
+        // NB: this use case uses cooperative locking to help close a small race window
+        if(mode == 0) {
+            try(FileLocker lock = new FileLocker(fd)) {
+                int ret = jnr.posix_fallocate(fd, offset, length);
+                if(ret == 0)
+                    return ret;
+            } catch (Throwable ignored) {
+            }
+        }
+
+        // out of options. report error
+        return -1;
     }
 
     @Override
