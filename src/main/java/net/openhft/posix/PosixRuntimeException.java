@@ -25,4 +25,14 @@ public class PosixRuntimeException extends RuntimeException {
     public PosixRuntimeException(Throwable cause) {
         super(cause);
     }
+
+    /**
+     * Constructs a new PosixRuntimeException with the specified detail message and cause.
+     *
+     * @param message The detail message for the exception.
+     * @param cause   The cause of the exception.
+     */
+    public PosixRuntimeException(String message, Exception cause) {
+        super(message, cause);
+    }
 }

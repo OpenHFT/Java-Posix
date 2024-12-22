@@ -2,13 +2,15 @@ package net.openhft.posix.internal.noop;
 
 import net.openhft.posix.PosixAPI;
 import net.openhft.posix.PosixRuntimeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * No-Op Posix implementation. Each method either does nothing and returns 0 (indicating no error)
- * or throws a {@link PosixRuntimeException} indicating that the POSIX implementation is missing.
+ * A no-op PosixAPI used if either no library is available or environment variables request it.
+ * Each method either does nothing and returns 0 (where trivial) or throws an exception if the function
+ * is categorically unsupported.
  */
 public class NoOpPosixAPI implements PosixAPI {
-    // The reason why this No-Op implementation is used
     private final String reason;
 
     /**

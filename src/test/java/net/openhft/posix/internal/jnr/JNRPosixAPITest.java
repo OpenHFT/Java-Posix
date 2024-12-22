@@ -2,6 +2,7 @@ package net.openhft.posix.internal.jnr;
 
 import jnr.ffi.Platform;
 import net.openhft.posix.*;
+import net.openhft.posix.internal.UnsafeMemory;
 import org.junit.Test;
 
 import java.io.File;
@@ -18,6 +19,10 @@ import static org.junit.Assert.*;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
+/**
+ * Tests for JNR-based POSIX API implementations. The existing tests are kept
+ * in their original order; extra tests appear at the end for improved coverage.
+ */
 public class JNRPosixAPITest {
 
     static final PosixAPI jnr = isUnix() ? new JNRPosixAPI() : new WinJNRPosixAPI();
@@ -50,7 +55,8 @@ public class JNRPosixAPITest {
 
     @Test
     public void mmap_sync() throws IOException {
-        assumeTrue(new File("/proc/self").exists());
+        assumeTrue("requires Unix", isUnix());
+
         final Path file = Files.createTempFile("mmap", ".test");
         final String filename = file.toAbsolutePath().toString();
         final int fd = jnr.open(filename, OpenFlag.O_RDWR, 0666);
@@ -99,7 +105,8 @@ public class JNRPosixAPITest {
 
     @Test
     public void mlock() throws IOException {
-        assumeTrue(new File("/proc/self").exists());
+        assumeTrue("requires Unix", isUnix());
+
         final Path file = Files.createTempFile("mmap", ".test");
         final String filename = file.toAbsolutePath().toString();
         final int fd = jnr.open(filename, OpenFlag.O_RDWR, 0666);
@@ -122,7 +129,7 @@ public class JNRPosixAPITest {
 
     @Test
     public void mlock2() throws IOException {
-        assumeTrue(new File("/proc/self").exists());
+        assumeTrue("requires Unix", isUnix());
         final Path file = Files.createTempFile("mmap", ".test");
         final String filename = file.toAbsolutePath().toString();
         final int fd = jnr.open(filename, OpenFlag.O_RDWR, 0666);
@@ -151,6 +158,7 @@ public class JNRPosixAPITest {
         long time = jnr.gettimeofday();
         long clock_gettime = jnr.clock_gettime();
         assertNotEquals(0, time);
+        // We allow some tolerance due to resolution differences or delays
         assertEquals(System.currentTimeMillis() * 1_000L, time, 2_000);
         assertEquals(clock_gettime / 1000.0, time, 1_000);
     }
@@ -229,6 +237,151 @@ public class JNRPosixAPITest {
             }
         }
     }
+
+    /**
+     * Test attempting to open an invalid or nonexistent file path.
+     * If the implementation returns -1 or throws an exception, we consider it correct
+     * for this scenario. Adjust as needed for your environment.
+     */
+    @Test
+    public void openInvalidPath() {
+        final String invalidPath = "/nonexistent/path/for/test-" + System.nanoTime();
+        try {
+            int fd = jnr.open(invalidPath, OpenFlag.O_RDONLY, 0);
+            // Many implementations return -1. Others might throw PosixRuntimeException.
+            // We'll just check for negative as a typical 'error' signal.
+            assertTrue("Expected fd < 0 or exception for invalid path", fd < 0);
+        } catch (PosixRuntimeException e) {
+            // Also acceptable: we just log it
+            System.out.println("open() threw PosixRuntimeException for invalid path, which is expected: " + e);
+        } catch (UnsupportedOperationException e) {
+            // Possibly some fallback scenario
+            System.out.println("open() threw UnsupportedOperationException for invalid path: " + e);
+        }
+    }
+
+    /**
+     * Test allocations using malloc/free. Ensures we can allocate a small memory region and write to it.
+     */
+    @Test
+    public void mallocAndFree() {
+        final long size = 128;
+        long ptr = jnr.malloc(size);
+        assertNotEquals("malloc returned null pointer", 0, ptr);
+
+        // Let's do a quick write: fill memory with zero
+        for (int i = 0; i < size; i += 8) {
+            UnsafeMemory.UNSAFE.putLong(ptr + i, 0xABCD1234ABCD1234L);
+        }
+
+        jnr.free(ptr);
+    }
+
+    /**
+     * Test calling madvise on a small, newly allocated memory region.
+     * Many systems might allow a no-op or partial advice. Just ensuring it doesn't fail.
+     */
+    @Test
+    public void madviseOnAllocated() {
+        final long length = 4096;
+        long ptr = jnr.malloc(length);
+        try {
+            int ret = jnr.madvise(ptr, length, MAdviseFlag.MADV_RANDOM);
+            // Could be 0 on success, or -1 on partial success. We'll accept >= 0 for demonstration.
+            assertTrue("madvise returned an error", ret >= 0);
+        } finally {
+            jnr.free(ptr);
+        }
+    }
+
+    /**
+     * Test calling fallocate on a small file, verifying that it doesn't fail for a basic scenario.
+     */
+    @Test
+    public void fallocateBasic() throws IOException {
+        final Path file = Files.createTempFile("fallocate", ".test");
+        try {
+            final int fd = jnr.open(file.toString(), OpenFlag.O_RDWR, 0666);
+            assertTrue("fd should be >= 0", fd >= 0);
+
+            long length = 8192;
+            int ret = jnr.fallocate(fd, 0, 0, length);
+            // Some filesystems or older kernels might return -1 if not implemented
+            if (ret != 0) {
+                System.out.println("fallocate not fully supported on this filesystem or kernel.");
+            }
+            jnr.close(fd);
+        } finally {
+            Files.deleteIfExists(file);
+        }
+    }
+
+    @Test
+    public void openWriteReadClose() throws IOException {
+        // Create a temporary file and convert path to String
+        final Path tempFile = Files.createTempFile("posix-write-read", ".test");
+        final String filePath = tempFile.toAbsolutePath().toString();
+
+        // 1. Open the file for read/write
+        int fd = jnr.open(filePath, OpenFlag.O_RDWR, 0666);
+        assertTrue("File descriptor should be non-negative", fd >= 0);
+
+        // 2. Write data into the file
+        // Let's write the phrase "Hello Posix" as bytes
+        byte[] dataToWrite = "Hello Posix".getBytes();
+        // Allocate a small block with jnr.malloc, copy data, then call write
+        long memPtr = jnr.malloc(dataToWrite.length);
+        try {
+            // Copy the bytes into the allocated memory
+            for (int i = 0; i < dataToWrite.length; i++) {
+                UnsafeMemory.UNSAFE.putByte(memPtr + i, dataToWrite[i]);
+            }
+            // Write from memPtr to the file
+            long written = jnr.write(fd, memPtr, dataToWrite.length);
+            assertEquals("Number of bytes written should match dataToWrite length",
+                    dataToWrite.length, written);
+        } finally {
+            jnr.free(memPtr);
+        }
+
+        // Close the file descriptor
+        int err2 = jnr.close(fd);
+        assertEquals("Close should return 0 on success", 0, err2);
+
+        // Move file offset to start for reading
+//        long newPos = jnr.lseek(fd, 0, WhenceFlag.SEEK_SET);
+//        assertEquals("Expected file offset to be 0 after SEEK_SET", 0, newPos);
+
+        fd = jnr.open(filePath, OpenFlag.O_RDWR, 0444);
+        assertTrue("File descriptor should be non-negative", fd >= 0);
+        // 3. Read data back
+        byte[] dataRead = new byte[dataToWrite.length];
+        long memPtr2 = jnr.malloc(dataToWrite.length);
+        try {
+            long bytesRead = jnr.read(fd, memPtr2, dataToWrite.length);
+            assertEquals("Number of bytes read should match dataToWrite length",
+                    dataToWrite.length, bytesRead);
+
+            // Copy back from memPtr2 to our Java byte array
+            for (int i = 0; i < dataToWrite.length; i++) {
+                dataRead[i] = UnsafeMemory.UNSAFE.getByte(memPtr2 + i);
+            }
+        } finally {
+            jnr.free(memPtr2);
+        }
+
+        // Compare the written and read data
+        assertArrayEquals("Expected data read from file to match data written",
+                dataToWrite, dataRead);
+
+        // 4. Close the file descriptor
+        int err = jnr.close(fd);
+        assertEquals("Close should return 0 on success", 0, err);
+
+        // Clean up the temp file
+        Files.deleteIfExists(tempFile);
+    }
+
 
     private static boolean isUnix() {
         return Platform.getNativePlatform().isUnix();

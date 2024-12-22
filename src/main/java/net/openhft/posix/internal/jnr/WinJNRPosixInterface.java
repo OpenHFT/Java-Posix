@@ -1,5 +1,7 @@
 package net.openhft.posix.internal.jnr;
 
+import jnr.ffi.Pointer;
+
 /**
  * This interface defines the native methods for POSIX-like operations on Windows using JNR (Java Native Runtime).
  */
@@ -58,7 +60,7 @@ public interface WinJNRPosixInterface {
      * @param len The number of bytes to read.
      * @return The number of bytes read.
      */
-    long _read(int fd, long dst, long len);
+    long _read(int fd, Pointer dst, int len);
 
     /**
      * Writes to a file descriptor.
@@ -68,7 +70,7 @@ public interface WinJNRPosixInterface {
      * @param len The number of bytes to write.
      * @return The number of bytes written.
      */
-    long _write(int fd, long src, long len);
+    long _write(int fd, Pointer src, int len);
 
     /**
      * Gets the process ID.
@@ -84,4 +86,7 @@ public interface WinJNRPosixInterface {
      * @return The error message.
      */
     String strerror(int errno);
+
+    // Method to convert fd -> Windows HANDLE
+    long _get_osfhandle(int fd);
 }

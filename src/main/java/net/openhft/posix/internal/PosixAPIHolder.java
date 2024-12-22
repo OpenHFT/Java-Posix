@@ -14,6 +14,10 @@ public class PosixAPIHolder {
     // The PosixAPI instance to be used
     public static PosixAPI POSIX_API;
 
+    private PosixAPIHolder() {
+        // utility
+    }
+
     /**
      * Loads the appropriate PosixAPI implementation based on the native platform.
      * If the platform is Unix, it loads {@link JNRPosixAPI}, otherwise it loads {@link WinJNRPosixAPI}.
