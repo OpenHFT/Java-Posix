@@ -23,11 +23,4 @@ public interface Kernel32JNRInterface {
      * @return The thread identifier of the calling thread.
      */
     int GetCurrentThreadId();
-
-    /**
-     * Retrieves information about the current system.
-     *
-     * @param addr The address of the SYSTEM_INFO structure that receives the information.
-     */
-    void GetNativeSystemInfo(long addr);
 }

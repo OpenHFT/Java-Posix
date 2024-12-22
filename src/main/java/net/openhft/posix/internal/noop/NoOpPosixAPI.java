@@ -2,8 +2,6 @@ package net.openhft.posix.internal.noop;
 
 import net.openhft.posix.PosixAPI;
 import net.openhft.posix.PosixRuntimeException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A no-op PosixAPI used if either no library is available or environment variables request it.

@@ -6,24 +6,6 @@ import jnr.ffi.Pointer;
  * This interface defines the native methods for POSIX-like operations on Windows using JNR (Java Native Runtime).
  */
 public interface WinJNRPosixInterface {
-    // SetFilePointer
-    // int ftruncate(int fd, long offset);
-
-    /**
-     * Allocates memory of a specified size.
-     *
-     * @param size The size of the memory to allocate.
-     * @return The address of the allocated memory.
-     */
-    long malloc(long size);
-
-    /**
-     * Frees allocated memory.
-     *
-     * @param ptr The address of the memory to free.
-     */
-    void free(long ptr);
-
     /**
      * Closes a file descriptor.
      *
@@ -71,13 +53,6 @@ public interface WinJNRPosixInterface {
      * @return The number of bytes written.
      */
     long _write(int fd, Pointer src, int len);
-
-    /**
-     * Gets the process ID.
-     *
-     * @return The process ID.
-     */
-    int _getpid();
 
     /**
      * Returns the error message for a given error code.
