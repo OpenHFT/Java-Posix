@@ -156,4 +156,9 @@ public class NoOpPosixAPI implements PosixAPI {
     public String strerror(int errno) {
         return null;
     }
+
+    @Override
+    public boolean isTraceEnabled() {
+        return false;
+    }
 }

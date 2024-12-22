@@ -71,15 +71,7 @@ public final class WinJNRPosixAPI implements PosixAPI {
      */
     @Override
     public int open(CharSequence path, int flags, int perm) {
-        try {
-            if (LOGGER.isTraceEnabled())
-                LOGGER.trace("Attempting to open file on Windows: path={}, flags={}, perm={}", path, flags, perm);
-            return jnrInterface._open(path.toString(), flags, perm);
-        } catch (UnsatisfiedLinkError e) {
-            throw new UnsupportedOperationException("Windows open() not available or linking failed.", e);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("Failed to open file: " + e.getMessage(), e);
-        }
+      return jnrInterface._open(path.toString(), flags, perm);
     }
 
     /**
@@ -90,15 +82,9 @@ public final class WinJNRPosixAPI implements PosixAPI {
      */
     @Override
     public int close(int fd) {
-        try {
-            if (LOGGER.isTraceEnabled())
-                LOGGER.trace("Closing file descriptor on Windows: fd={}", fd);
+
             return jnrInterface._close(fd);
-        } catch (UnsatisfiedLinkError e) {
-            throw new UnsupportedOperationException("Windows close() not available or linking failed.", e);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("Failed to close fd=" + fd + ": " + e.getMessage(), e);
-        }
+
     }
 
     /**
@@ -111,15 +97,9 @@ public final class WinJNRPosixAPI implements PosixAPI {
      */
     @Override
     public long read(int fd, long dst, long len) {
-        try {
-            if (LOGGER.isTraceEnabled())
-                LOGGER.trace("Reading from fd={}, to memory @ {}, length={}", fd, dst, len);
+
             return jnrInterface._read(fd, jnr.ffi.Pointer.wrap(Runtime.getSystemRuntime(), dst), (int) len);
-        } catch (UnsatisfiedLinkError e) {
-            throw new UnsupportedOperationException("Windows read() not available or linking failed.", e);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("Reading from fd=" + fd + " failed: " + e.getMessage(), e);
-        }
+
     }
 
     /**
@@ -132,15 +112,8 @@ public final class WinJNRPosixAPI implements PosixAPI {
      */
     @Override
     public long write(int fd, long src, long len) {
-        try {
-            if (LOGGER.isTraceEnabled())
-                LOGGER.trace("Writing to fd={}, from memory @ {}, length={}", fd, src, len);
+
             return jnrInterface._write(fd, jnr.ffi.Pointer.wrap(Runtime.getSystemRuntime(), src), (int) len);
-        } catch (UnsatisfiedLinkError e) {
-            throw new UnsupportedOperationException("Windows write() not available or linking failed.", e);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("Writing to fd=" + fd + " failed: " + e.getMessage(), e);
-        }
     }
 
     /**
@@ -185,13 +158,7 @@ public final class WinJNRPosixAPI implements PosixAPI {
      */
     @Override
     public int getpid() {
-        try {
             return kernel32.GetCurrentProcessId();
-        } catch (UnsatisfiedLinkError e) {
-            throw new UnsupportedOperationException("Windows GetCurrentProcessId() not available or linking failed.", e);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("Failed to getpid: " + e.getMessage(), e);
-        }
     }
 
     /**
@@ -470,5 +437,10 @@ public final class WinJNRPosixAPI implements PosixAPI {
     @Override
     public String strerror(int errno) {
         return jnrInterface.strerror(errno);
+    }
+
+    @Override
+    public boolean isTraceEnabled() {
+        return LOGGER.isTraceEnabled();
     }
 }

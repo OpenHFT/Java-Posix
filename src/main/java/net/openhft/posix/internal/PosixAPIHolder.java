@@ -3,6 +3,7 @@ package net.openhft.posix.internal;
 import jnr.ffi.Platform;
 import net.openhft.posix.PosixAPI;
 import net.openhft.posix.internal.jnr.JNRPosixAPI;
+import net.openhft.posix.internal.jnr.TracePosixAPI;
 import net.openhft.posix.internal.jnr.WinJNRPosixAPI;
 import net.openhft.posix.internal.noop.NoOpPosixAPI;
 
@@ -37,6 +38,8 @@ public class PosixAPIHolder {
             // Fallback to NoOpPosixAPI if an error occurs
             posixAPI = new NoOpPosixAPI(t.toString());
         }
+        if (posixAPI.isTraceEnabled())
+            posixAPI = new TracePosixAPI(posixAPI);
         POSIX_API = posixAPI;
     }
 

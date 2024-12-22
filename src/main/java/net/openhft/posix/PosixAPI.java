@@ -584,4 +584,6 @@ public interface PosixAPI {
         String msg = strerror(lastError());
         return msg == null ? "" : msg;
     }
+
+    boolean isTraceEnabled();
 }

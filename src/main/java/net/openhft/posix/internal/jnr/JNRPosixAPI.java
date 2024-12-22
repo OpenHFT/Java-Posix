@@ -91,76 +91,27 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public int open(CharSequence path, int flags, int perm) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Opening file: path={}, flags={}, perm={}", path, flags, perm);
-            }
-            return jnr.open(path, flags, perm);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("open symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("open call failed: " + e.getMessage(), e);
-        }
+        return jnr.open(path, flags, perm);
     }
 
     @Override
     public long lseek(int fd, long offset, int whence) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Seeking fd={}, offset={}, whence={}", fd, offset, whence);
-            }
-            long ret = jnr.lseek(fd, offset, whence);
-            if (ret < 0 && LOGGER.isWarnEnabled()) {
-                LOGGER.warn("lseek returned negative value: {}", ret);
-            }
-            return ret;
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("lseek symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("lseek call failed: " + e.getMessage(), e);
-        }
+        return jnr.lseek(fd, offset, whence);
     }
 
     @Override
     public int ftruncate(int fd, long offset) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("ftruncate fd={}, offset={}", fd, offset);
-            }
-            return jnr.ftruncate(fd, offset);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("ftruncate symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("ftruncate call failed: " + e.getMessage(), e);
-        }
+        return jnr.ftruncate(fd, offset);
     }
 
     @Override
     public int lockf(int fd, int cmd, long len) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Locking fd={} cmd={} len={}", fd, cmd, len);
-            }
-            return jnr.lockf(fd, cmd, len);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("lockf symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("lockf call failed: " + e.getMessage(), e);
-        }
+        return jnr.lockf(fd, cmd, len);
     }
 
     @Override
     public int close(int fd) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Closing fd={}", fd);
-            }
-            return jnr.close(fd);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("close symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("close call failed: " + e.getMessage(), e);
-        }
+        return jnr.close(fd);
     }
 
     static final boolean MOCKALL_DUMP = Boolean.getBoolean("mlockall.dump");
@@ -182,10 +133,7 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public long mmap(long addr, long length, int prot, int flags, int fd, long offset) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("mmap addr={}, length={}, prot={}, flags={}, fd={}, offset={}",
-                    addr, length, prot, flags, fd, offset);
-        }
+
         final Pointer wrap = addr == 0 ? NULL : Pointer.wrap(RUNTIME, addr);
         final long mmap = jnr.mmap(wrap, length, prot, flags, fd, offset);
         if (mmap == 0 || mmap == -1) {
@@ -201,8 +149,8 @@ public final class JNRPosixAPI implements PosixAPI {
     /**
      * Performs the mlock2 system call.
      *
-     * @param addr The address to lock.
-     * @param length The length of the memory to lock.
+     * @param addr        The address to lock.
+     * @param length      The length of the memory to lock.
      * @param lockOnFault Whether to lock on fault.
      * @return The result of the mlock2 system call.
      */
@@ -218,7 +166,7 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public boolean mlock(long addr, long length) {
-        if(Jvm.isAzul()) {
+        if (Jvm.isAzul()) {
             LOGGER.warn("mlock called but ignored for Azul");
             return true; // no-op on Azul, ignore
         }
@@ -233,7 +181,7 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public boolean mlock2(long addr, long length, boolean lockOnFault) {
-        if(Jvm.isAzul()) {
+        if (Jvm.isAzul()) {
             LOGGER.warn("mlock2 called but ignored for Azul");
             return true; // no-op on Azul, ignore
         }
@@ -291,30 +239,12 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public int munmap(long addr, long length) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("munmap addr={}, length={}", addr, length);
-            }
-            return jnr.munmap(addr, length);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("munmap symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("munmap call failed: " + e.getMessage(), e);
-        }
+        return jnr.munmap(addr, length);
     }
 
     @Override
     public int msync(long address, long length, int flags) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("msync on address={}, length={}, flags={}", address, length, flags);
-            }
-            return jnr.msync(address, length, flags);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("msync symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("msync call failed: " + e.getMessage(), e);
-        }
+        return jnr.msync(address, length, flags);
     }
 
     public class FileLocker implements AutoCloseable {
@@ -339,9 +269,6 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public int fallocate(int fd, int mode, long offset, long length) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("fallocate on fd={}, mode={}, offset={}, length={}", fd, mode, offset, length);
-        }
         // fallocate support across environments/file systems is patchy
         // try a couple of approaches in order of preference
 
@@ -362,16 +289,16 @@ public final class JNRPosixAPI implements PosixAPI {
             if (ret == 0)
                 return ret;
         } catch (Throwable e) {
-            if(mode != 0)
+            if (mode != 0)
                 throw e;
         }
 
         // if both fallocate attempts fail, then revert to posix_ftruncate when mode = 0
         // NB: this use case uses cooperative locking to help close a small race window
-        if(mode == 0) {
-            try(FileLocker lock = new FileLocker(fd)) {
+        if (mode == 0) {
+            try (FileLocker lock = new FileLocker(fd)) {
                 int ret = jnr.posix_fallocate(fd, offset, length);
-                if(ret == 0)
+                if (ret == 0)
                     return ret;
             } catch (Throwable ignored) {
             }
@@ -383,126 +310,49 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public int madvise(long addr, long length, int advice) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("madvise on addr={}, length={}, advice={}", addr, length, advice);
-            }
-            return jnr.madvise(addr, length, advice);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("madvise symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("madvise call failed: " + e.getMessage(), e);
-        }
+        return jnr.madvise(addr, length, advice);
     }
 
     @Override
     public long read(int fd, long dst, long len) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Reading from fd={}, dst={}, len={}", fd, dst, len);
-            }
-            return jnr.read(fd, dst, len);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("read symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("read call failed: " + e.getMessage(), e);
-        }
+        return jnr.read(fd, dst, len);
     }
 
     @Override
     public long write(int fd, long src, long len) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Writing to fd={}, src={}, len={}", fd, src, len);
-            }
-            return jnr.write(fd, src, len);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("write symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("write call failed: " + e.getMessage(), e);
-        }
+        return jnr.write(fd, src, len);
     }
 
     @Override
     public int gettimeofday(long timeval) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("gettimeofday for timeval @ {}", timeval);
-            }
-            return jnr.gettimeofday(timeval, 0L);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("gettimeofday symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("gettimeofday call failed: " + e.getMessage(), e);
-        }
+        return jnr.gettimeofday(timeval, 0L);
     }
 
     @Override
     public long malloc(long size) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Allocating memory: size={}", size);
-            }
-            return jnr.malloc(size);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("malloc symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("malloc call failed: " + e.getMessage(), e);
-        }
+        return jnr.malloc(size);
     }
 
     @Override
     public void free(long ptr) {
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Freeing memory @ {}", ptr);
-            }
-            jnr.free(ptr);
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("free symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("free call failed: " + e.getMessage(), e);
-        }
+        jnr.free(ptr);
     }
 
     @Override
     public int get_nprocs() {
-        try {
-            return jnr.get_nprocs();
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("get_nprocs symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("get_nprocs call failed: " + e.getMessage(), e);
-        }
+        return jnr.get_nprocs();
     }
 
     @Override
     public int get_nprocs_conf() {
-        try {
-            if (get_nprocs_conf == 0)
-                get_nprocs_conf = jnr.get_nprocs_conf();
-            return get_nprocs_conf;
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("get_nprocs_conf symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("get_nprocs_conf call failed: " + e.getMessage(), e);
-        }
+        if (get_nprocs_conf == 0)
+            get_nprocs_conf = jnr.get_nprocs_conf();
+        return get_nprocs_conf;
     }
 
     @Override
     public int sched_setaffinity(int pid, int cpusetsize, long mask) {
-        int ret;
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("sched_setaffinity pid={}, cpusetsize={}, mask={}", pid, cpusetsize, mask);
-            }
-            ret = jnr.sched_setaffinity(pid, cpusetsize, Pointer.wrap(Runtime.getSystemRuntime(), mask));
-
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("sched_setaffinity symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("sched_setaffinity call failed: " + e.getMessage(), e);
-        }
+        int ret = jnr.sched_setaffinity(pid, cpusetsize, Pointer.wrap(Runtime.getSystemRuntime(), mask));
         if (ret != 0)
             throw new IllegalArgumentException(lastErrorStr() + ", ret: " + ret);
         return ret;
@@ -510,17 +360,7 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public int sched_getaffinity(int pid, int cpusetsize, long mask) {
-        int ret;
-        try {
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("sched_getaffinity pid={}, cpusetsize={}, mask={}", pid, cpusetsize, mask);
-            }
-        ret = jnr.sched_getaffinity(pid, cpusetsize, Pointer.wrap(Runtime.getSystemRuntime(), mask));
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("sched_getaffinity symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("sched_getaffinity call failed: " + e.getMessage(), e);
-        }
+        int ret = jnr.sched_getaffinity(pid, cpusetsize, Pointer.wrap(Runtime.getSystemRuntime(), mask));
         if (ret != 0)
             throw new IllegalArgumentException(lastErrorStr() + ", ret: " + ret);
         return ret;
@@ -528,25 +368,12 @@ public final class JNRPosixAPI implements PosixAPI {
 
     @Override
     public int getpid() {
-        try {
-            return jnr.getpid();
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("getpid symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("getpid call failed: " + e.getMessage(), e);
-        }
+        return jnr.getpid();
     }
 
     @Override
     public int gettid() {
-        int ret;
-        try {
-            ret = gettid.getAsInt();
-        } catch (UnsatisfiedLinkError ule) {
-            throw new UnsupportedOperationException("gettid symbol not found or linking failed", ule);
-        } catch (Exception e) {
-            throw new PosixRuntimeException("gettid call failed: " + e.getMessage(), e);
-        }
+        int ret = gettid.getAsInt();
         if (ret < 0)
             throw new IllegalArgumentException(lastErrorStr() + ", ret: " + ret);
         return ret;
@@ -575,5 +402,10 @@ public final class JNRPosixAPI implements PosixAPI {
         } finally {
             free(ptr);
         }
+    }
+
+    @Override
+    public boolean isTraceEnabled() {
+        return LOGGER.isTraceEnabled();
     }
 }
