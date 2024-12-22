@@ -1,0 +1,68 @@
+= Document Source README
+:author: Peter Lawrey
+:doctype: readme
+:version-label: v1.1
+:toc:
+:toclevels: 2
+:source-highlighter: rouge
+
+// This README aligns with the "Project Style Guide" for AsciiDoc documentation.
+
+This directory contains all project documentation, written in AsciiDoc format to maintain clarity and consistency.
+By storing these documents here, we facilitate iterative updates, especially when collaborating with AI tools or multiple team members.
+
+== Purpose
+
+* Ensure all project documentation is centralised, version-controlled, and easy to update.
+* Provide clear references to the functional requirements, style guides, and other relevant AsciiDoc documents.
+* Support iterative development by making it straightforward to modify and regenerate documentation.
+
+== Contents
+
+* link:Requirements.adoc[Requirements.adoc] – Functional requirements and specifications for the *Posix* library.
+  Covers code generation details, POSIX calls, fallback strategies, and more.
+
+* style-guide.adoc (if present) – The main style guide describing coding, Yaml, Maven, and AsciiDoc conventions.
+  Refer to it for best practices when adding or updating project files.
+
+== Updating the Documentation
+
+1. **Open the `.adoc` file** you wish to modify (e.g. `Requirements.adoc`).
+2. **Make changes** following the *Project Style Guide* rules:
+   - Use British English.
+   - Keep paragraphs short and active.
+   - Insert code blocks with `[source,java]` or `[source,bash]` tags, as appropriate.
+3. **Cross-check** references (xref links, file names, headings).
+4. **Generate output** (HTML, PDF) to verify formatting.
+
+== Working Iteratively with AI Tools
+
+This directory supports an iterative, documentation-driven approach:
+- Prompt AI tools with partial `.adoc` files or propose modifications.
+- Review changes in a preview environment (e.g. local Asciidoctor, Git diff).
+- Incorporate relevant edits, delete padding or incorrect suggestions, and refine until final.
+
+== Contributing
+
+If you have suggestions or need to add new documentation:
+- Follow the established directory structure.
+- Name files meaningfully (e.g. `new-feature-overview.adoc`).
+- Update cross-references in `Requirements.adoc` or this README if linking related content.
+- Avoid duplication by referencing existing `.adoc` files whenever possible.
+
+[TIP]
+====
+You can add short `// add:` comments to propose wording improvements or placeholders for additional details.
+These do not render in the final output but serve as markers for future iterations.
+====
+
+== Licence
+
+All documentation here is provided under the same licensing terms as the main codebase, stated in the link:../../LICENSE.adoc[LICENSE.adoc].
+This ensures consistent permissions and limitations across both code and documentation assets.
+
+== Contact
+
+If you have any questions or require assistance:
+- Consult the *Project Style Guide* for general guidelines.
+- Contact the project maintainers or raise an issue in the repository.

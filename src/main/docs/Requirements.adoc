@@ -1,10 +1,20 @@
 = Posix Functional Requirements Document
 :author: Peter Lawrey
-:revnumber: 1.0
+:revnumber: 1.1
 :revdate: 2024-05-03
 :toc: left
 :toclevels: 2
 :source-highlighter: rouge
+
+== 0. Adherence to the Project Style Guide
+
+The content in this document follows the *Project Style Guide*, ensuring:
+- Consistent British English usage.
+- Concise, active voice.
+- Logical headings and sections.
+- AsciiDoc best practices (including `[source,java]` blocks, descriptive headings, and admonitions).
+
+Where further clarity or detail is needed, short comments (`// add:`) appear to suggest enhancements.
 
 This document provides the functional requirements and an overview of the *Posix* library as released under OpenHFT.
 Its purpose is to capture the goals, constraints, and architectural decisions that allow any developer to reconstruct
@@ -30,8 +40,7 @@ The scope of these functional requirements and release artifacts is:
 - Provide a `PosixAPI` interface and multiple concrete implementations (via JNR, JNA, or fallback) to cover
   core low-level system calls.
 // add: "Suggest referencing which environment variables (if any) might influence the fallback decision."
-- Expose classes that wrap memory operations (e.g., `mmap`, `munmap`, `msync`, `mlock`) and file operations (e.g.,
-  `open`, `close`, `read`, `write`, `ftruncate`, `fallocate`) in a way that is consistent and testable.
+- Expose classes that wrap memory operations (e.g., `mmap`, `munmap`, `msync`, `mlock`) and file operations (`open`, `close`, `read`, `write`, `ftruncate`, `fallocate`) in a way that is consistent and testable.
 - Enable developers to integrate with system capabilities not offered by default in the Java standard library.
 - Support tests that verify the correctness of the above operations on supported systems.
 
@@ -42,7 +51,7 @@ The project follows a standard Maven layout. Key files and directories include:
 1. `pom.xml`
    - Defines the Maven build configuration.
    - Inherits from a parent POM (`java-parent-pom`) and uses a curated BOM (`third-party-bom`) for dependency versions.
-   - Declares essential dependencies, including JNA, JNR, and testing libraries (Junit, SLF4J for logging).
+   - Declares essential dependencies, including JNA, JNR, and testing libraries (`JUnit`, `SLF4J` for logging).
    - Configures plugins for source attachment, compilation, and resource handling.
    - Provides a `java11` profile to adjust resource processing for Java 11 environments.
 
@@ -57,24 +66,24 @@ The project follows a standard Maven layout. Key files and directories include:
 
 4. `src/main/java/net/openhft/posix/...`
    - Houses the main production code, split into packages:
-     * `net.openhft.posix` — Core enums, interfaces, exceptions, and utility classes (e.g., `PosixAPI`, `ClockId`, `OpenFlag`, etc.).
-     * `net.openhft.posix.internal` — Internal packages (`core`, `jnr`, `jna`, `noop`, `raw`) providing OS- or library-specific implementations.
+     * `net.openhft.posix` – Core enums, interfaces, exceptions, and utility classes (e.g. `PosixAPI`, `ClockId`, `OpenFlag`, etc.).
+     * `net.openhft.posix.internal` – Internal packages (`core`, `jnr`, `jna`, `noop`, `raw`) providing OS- or library-specific implementations.
        ** `net.openhft.posix.internal.jnr.*` – Classes that implement `PosixAPI` using JNR.
        ** `net.openhft.posix.internal.jna.*` – Classes that implement `PosixAPI` using JNA.
        ** `net.openhft.posix.internal.noop.*` – A fallback no-op implementation for systems lacking native support.
-       ** `net.openhft.posix.internal.core.*` – General utilities for OS detection, JVM checks, and unsafe memory operations.
+       ** `net.openhft.posix.internal.core.*` – Utilities for OS detection, JVM checks, and unsafe memory operations.
 
 5. `src/test/java/net/openhft/posix/internal/jnr/...`
-   - Contains test classes (e.g., `JNRPosixAPITest`, `BenchmarkMain`, etc.) to validate performance and correctness.
+   - Contains test classes (e.g. `JNRPosixAPITest`, `BenchmarkMain`, etc.) to validate performance and correctness.
    - Demonstrates how to open files, map memory, lock memory, set CPU affinity, and other operations.
    // add: "Optionally add a top-level test package overview to clarify how the tests are organized and how coverage is measured."
 
-In essence, the directory is structured so that you can run standard Maven commands (`mvn clean install`) to build,
-test, and package the resulting JAR for distribution.
+Maven commands (like `mvn clean install`) build, test, and package the resulting JAR for distribution.
 
 == 4. Functional Requirements
 
 === 4.1 High-Level Requirements
+
 1. *Provide a `PosixAPI` interface.*
    The design must centralize all function signatures (close, open, read, write, etc.) in a single interface.
    **Acceptance Criteria**:
@@ -91,7 +100,7 @@ test, and package the resulting JAR for distribution.
    // add: "Link to any known or tested minimal OS versions or distribution versions (like Ubuntu 18.04, Windows 10, etc.)."
 
 3. *Offer memory operations.*
-   The library must expose memory locking, mapping, and synchronization calls (e.g., `mlock`, `mlock2`, `mmap`, `msync`, etc.).
+   The library must expose memory locking, mapping, and synchronisation calls (e.g., `mlock`, `mlock2`, `mmap`, `msync`, etc.).
    **Acceptance Criteria**:
    - Verified by tests in `JNRPosixAPITest` or through the `BenchmarkMain` usage.
    - Methods return correct error codes, throw `PosixRuntimeException` for invalid calls.
@@ -99,21 +108,21 @@ test, and package the resulting JAR for distribution.
 4. *Support file operations and concurrency.*
    The system must provide file open/close, ftruncate, fallocate, read, write, lockf, plus relevant flags.
    **Acceptance Criteria**:
-   - Tests show that creating, truncating, reading, and writing files behave as expected on Unix or Windows.
-   - Code can lock sections of a file concurrently and release locks without data corruption.
+   - Tests show that creating, truncating, reading, and writing files behaves as expected on Unix or Windows.
+   - Code can lock file sections concurrently, releasing locks without data corruption.
 
 5. *Expose process and thread functionality.*
    The code must implement process ID retrieval, CPU affinity manipulation, clock/time retrieval, etc.
    **Acceptance Criteria**:
-   - `getpid()`, `gettid()`, and `sched_setaffinity` are shown to work (where supported) through the provided tests.
-   - Windows or macOS gracefully degrade or no-op where certain calls are unsupported.
+   - `getpid()`, `gettid()`, and `sched_setaffinity` are shown to work (where supported) through provided tests.
+   - Windows or macOS gracefully degrades or no-ops where calls are unsupported.
 
 6. *Documentation and licensing compliance.*
-   All code must carry the appropriate *Apache License v2.0* disclaimers, ensure readmes are clear on usage, and
-   provide reference for external dependencies.
+   All code must carry the appropriate *Apache License v2.0* disclaimers and ensure READMEs are clear on usage,
+   referencing external dependencies.
    **Acceptance Criteria**:
-   - The presence of a `LICENSE.adoc` clarifying usage per Apache 2.0.
-   - README points to JNR, JNA usage, and states possible known limitations.
+   - A `LICENSE.adoc` clarifying usage under Apache 2.0.
+   - README points to JNR, JNA usage, and states known limitations.
 
 === 4.2 Detailed File-Level Requirements
 
@@ -178,10 +187,10 @@ test, and package the resulting JAR for distribution.
 
 3. **Compile**
    Run:
-   ```
+   ----
    mvn clean install
-   ```
-   This command downloads dependencies, compiles the sources, runs all tests, and produces the final JAR under the `target/` directory.
+   ----
+   This downloads dependencies, compiles sources, runs tests, and produces the final JAR under `target/`.
 
 4. **Testing**
    If all tests pass, you can find logs in the usual Maven `target/surefire-reports` location.
@@ -234,9 +243,8 @@ If no native library can be loaded, the methods either no-op or throw `PosixRunt
 
 == 8. Conclusion
 
-By following this document and the code layout under `src/main/java` plus the Maven configuration in `pom.xml`, you can reproduce
-and validate the entire *Posix* release. This library aims to give Java users direct, portable (and partially fallback) access
-to core system calls traditionally unavailable in the JVM standard library.
+By following these requirements and the *Project Style Guide*, the *Posix* library remains coherent, well-documented, and
+maintainable. System integrators can extend or customise these calls, ensuring broad coverage of POSIX capabilities in
+Java-based applications.
 
-System integrators and advanced developers can further customize or extend the set of calls, ensuring broad coverage of POSIX
-capabilities in Java-based applications.
+// add: "Regularly review this document (and the style guide) to incorporate new best practices or project-specific updates."
